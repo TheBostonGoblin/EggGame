@@ -64,25 +64,31 @@ public class PlayerControls : MonoBehaviour
     public bool IsGrounded()//checks if the player is touching the ground via raycasting
     {
 
-        /*Vector2 centerOfBoxCollider = playerBoxCollider2D.bounds.center;
+        Vector2 centerOfBoxCollider = playerBoxCollider2D.bounds.center;
+        Vector2 xAxisExtents = new Vector2(playerBoxCollider2D.bounds.extents.x,0);
+        Vector2 rayRightPos = centerOfBoxCollider + xAxisExtents;
+        Vector2 rayLeftPos = centerOfBoxCollider - xAxisExtents;
         Vector2 direction = Vector2.down;
+
         float distanceToGround = playerBoxCollider2D.bounds.extents.y;
         float extraHeightForTest = 0.03f;
+        float rayLength = distanceToGround + extraHeightForTest;
         Color rayColor = Color.red;
-        RaycastHit2D raycastHit = Physics2D.Raycast(centerOfBoxCollider, direction, distanceToGround + extraHeightForTest, groundLayer);
-        Debug.DrawRay(centerOfBoxCollider, direction * (distanceToGround + extraHeightForTest), rayColor);*/
-        float width = playerBoxCollider2D.bounds.extents.x;
-        float height = 0.3f;
-        Vector2 size = new Vector2(width,height);
-        float positionOfBoxY = -playerBoxCollider2D.bounds.extents.y;
-        float positionOfBoxX = playerBoxCollider2D.bounds.center.x;
-        Vector2 point = new Vector2(positionOfBoxX,positionOfBoxY);
-        Physics2D.OverlapBox(point,size,0.0f,groundLayer.value);
+        RaycastHit2D raycastHitRight = Physics2D.Raycast(rayRightPos, direction, rayLength, groundLayer);
+        RaycastHit2D raycastHitLeft = Physics2D.Raycast(rayLeftPos, direction, rayLength, groundLayer);
 
-        return Physics2D.OverlapBox(point, size, 0.0f, groundLayer.value);
-        ///for this to return true their must be a intercetion between the ray and the ground 
-        ///because the box collider can prevent a intercection(distance can be zero and is therefore not interceting)
-        ///so the +.1f ensures when the player lands their is a intercetion  
+        Debug.DrawRay(rayRightPos, direction * rayLength, rayColor);
+        Debug.DrawRay(rayLeftPos, direction * rayLength, rayColor);
+
+        if (raycastHitRight.collider || raycastHitLeft.collider)
+        {
+            if (rigidBody.velocity.y == 0)
+            {
+
+            }
+            return true;
+        }
+        return false;
 
     }
     public bool IsRising()
@@ -95,7 +101,7 @@ public class PlayerControls : MonoBehaviour
     }
     public bool IsFalling()
     {
-        if (rigidBody.velocity.y <= 0.0f)
+        if (rigidBody.velocity.y < -0.1f)
         {
             return true;
         }
@@ -109,6 +115,8 @@ public class PlayerControls : MonoBehaviour
     {
         animator.SetFloat("VSpeed", Mathf.Abs(rigidBody.velocity.y));
         animator.SetBool("IsGrounded", IsGrounded());
+        animator.SetBool("IsRising", IsRising());
+        animator.SetBool("IsFalling",IsFalling());
         HorizontalMovement();
     }
     void Update()
